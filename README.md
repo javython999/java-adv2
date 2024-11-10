@@ -98,3 +98,83 @@ UTF-8
 * 장점:
   * ASCII 문자는 1byte로 표현 == ASCII 문자 호환
   * 현대의 사실상 표준 인코딩 기술
+
+---
+# I/O 기본1
+## 스트림
+현대의 컴퓨터는 대부분 byte 단위로 데이터를 주고 받는다.
+참고로 bit 단위는 너무 작기 때문에 byte 단위를 기본으로 사용한다.
+이렇게 데이터를 주고 받는 것을 Input/Output(I/O)라 한다.
+자바는 내부에 있는 데이터를 외부에 있는 파일에 저장하거나, 네트워크를 통해 전송하거나, 콘솔에 출력때 모두 byte 단위로 데이터를 주고 받는다.
+만약 파일, 네트워크, 콘솔 각각 데이터를 주고 받는 방식이 다르다면 상당히 불편할 것이다.
+또한 파일에 저장하던 내용을 네트워크에 전달하거나 콘솔에 출력하도록 변경할 때 너무 많은 코드를 변경해야 할 수 있다.
+이런 문제를 해결하기 위해 자바는 `InputStream`, `OutputStream`이라는 기본 추상 클래스를 제공한다.
+
+```mermaid
+classDiagram
+InputStream <|-- FileInputStream
+InputStream <|-- ByteArrayInputStream
+InputStream <|-- SocketInputStream
+
+class InputStream {
+  read()
+  read(byte[])
+  readAllBytes()
+}
+
+class FileInputStream {
+  read()
+  read(byte[])
+  readAllBytes()
+}
+
+class ByteArrayInputStream {
+  read()
+  read(byte[])
+  readAllBytes()
+}
+
+class SocketInputStream {
+  read()
+  read(byte[])
+  readAllBytes()
+}
+
+```
+
+```mermaid
+classDiagram
+OutputStream <|-- FileOutputStream
+OutputStream <|-- ByteArrayOutputStream
+OutputStream <|-- SocketOutputStream
+
+class OutputStream {
+  write(int)
+  write(byte[])
+}
+
+class FileOutputStream {
+  write(int)
+  write(byte[])
+}
+
+class ByteArrayOutputStream {
+  write(int)
+  write(byte[])
+}
+
+class SocketOutputStream {
+  write(int)
+  write(byte[])
+}
+
+```
+>정리
+
+`InputStream`과 `OutputStream`이 다양한 스트림들을 추상화하고 기본 기능에 대한 표준을 잡아둔 덕분에 
+개발자는 편리하게 입출력 작업을 수행할 수 있다. 이러한 추상화의 장점은 다음과 같다.
+* 일관성: 모든 종류의 입출력 작업에 대해 동일한 인터페이스(여기에서는 부모의 메서드)를 사용할 수 있어, 코드의 일관성이 유지된다.
+* 유연성: 실제 데이터 소스나 목적지가 무엇인지 관계없이 동일한 방식으로 코드를 작성할 수 있다. 예를 들어, 파일, 네트워크, 메모리 등 다양한 소스에 대해 동일한 메서드를 사용할 수 있다.
+* 확장성: 새로운 유형의 입출력 스트림을 쉽게 추가할 수 있다.
+* 재사용성: 다양한 스트림 클래스들을 조합하여 복잡한 입출력 작업을 수행할 수 있다. 예를 들어 `BufferdInputStream`을 사용하여 성능을 향상시키거나, `DataInputStream`을 사용하여 기본 데이터 타입을 쉽게 읽을 수있다.
+* 에러 처리: 표준화된 예외 처리 메커니즘을 통해 일관된 방식으로 오류를 처리할 수 있다.
