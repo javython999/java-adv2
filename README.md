@@ -178,3 +178,92 @@ class SocketOutputStream {
 * 확장성: 새로운 유형의 입출력 스트림을 쉽게 추가할 수 있다.
 * 재사용성: 다양한 스트림 클래스들을 조합하여 복잡한 입출력 작업을 수행할 수 있다. 예를 들어 `BufferdInputStream`을 사용하여 성능을 향상시키거나, `DataInputStream`을 사용하여 기본 데이터 타입을 쉽게 읽을 수있다.
 * 에러 처리: 표준화된 예외 처리 메커니즘을 통해 일관된 방식으로 오류를 처리할 수 있다.
+
+## 파일 입출력과 성능 최적화
+자바에서 1byte씩 write()나, read()를 호출할 때마다 운영 체제로 시스템 콜이 발생하고, 이 시스템 콜이 자체가 상당한 오버헤드를 유발한다.
+운영 체제와 하드웨어가 어느 정도 최적화를 제공하더라도, 자주 발생하는 시스템 콜로 인한 성능 저하는 피할 수 없다.
+결국 자바에서 read(), write() 호출 횟수를 줄여서 시스템 콜 횟수도 줄여야 한다.
+
+많은 데이터를 한 번에 전달하면 성능을 최적화 할 수 있다. 이렇게 되면 시스템 콜도 줄어들고 HDD, SDD 같은 장치들의 작동 횟수도 줄어 든다.
+그런데 버퍼의 크기가 커진다고 해서 속도가 계속 줄어들지 않는다. 왜냐하면 디스크나 파일 시스템에서 데이터를 읽고 쓰는 기본 단위가 보통 4KB, 8KB이기 때문이다.
+결국 버퍼에 많은 데이터를 담아서 보내도 디스크나 파일 시스템에서 해당 단위로 나누어 저장하기 때문에 효율에는 한계가 있다.
+따라서 버퍼의 크기는 보통 4KB, 8KB 정도로 잡는 것이 효율적이다.
+
+### BufferedOutputStream
+`BufferedOutputStream`은 버퍼 기능을 내부에서 대신 처리해준다. 따라서 단순한 코드를 유지하면서 버퍼를 사용하는 이점도 함께 누릴 수 있다.
+* `BufferedOutputStream`은 내부에서 단순히 버퍼 기능만 제공한다. 따라서 반드시 대상 `OutputStream`이 있어야 한다.
+* 추가로 사용할 버퍼의 크기도 함께 전달할 수 있다.
+* `byte[]`을 직접 다루지 않고 단순하게 코드를 작성할 수 있다.
+
+```mermaid
+classDiagram
+
+OutputStream <|-- FileOutputStream
+OutputStream <|-- BufferedOutputStream
+        
+class OutputStream {
+  write(int)
+  write(byte[])
+}
+
+class FileOutputStream {
+    
+}
+class BufferedOutputStream {
+  OutputStream out
+}
+```
+* `BufferedOutputStream`은 `OutputStream`을 상속받는다 따라서 개발자 입장에서 보면 `OutputStream`과 같은 기능을 그대로 사용할 수 있다.
+
+### 기본 스트림, 보조 스트림
+* `FileOutputStream`과 같이 단독으로 사용할 수 있는 스트림을 기본 스트림이라 한다.
+* `BufferedOutputStream`과 같이 단독으로 사용할 수 없고, 보조 기능을 제공하는 스트림을 보조 스트림이라 한다.
+
+### BufferedInputStream
+```mermaid
+classDiagram
+
+InputStream <|-- FileInputStream
+InputStream <|-- BufferedInputStream
+        
+class InputStream {
+  read()
+  read(byte[])
+  readAllBytes()
+}
+
+class FileInputStream {
+    
+}
+class BufferedInputStream {
+  InputStream input
+}
+```
+* `BufferedInputStream`은 `InputStream`을 상속 받는다. 따라서 개발자 입장에서 보면 `InputStream`과 같은 기능을 그대로 사용할 수 있다.
+
+### 버퍼를 직접 다루는 것보다 BufferedXxx의 성능이 떨어지는 이유
+이 이유는 바로 동기화 때문이다. 
+* `BufferedOutputStream`을 포함한 `BufferedXxx` 클래스는 모두 동기화 처리가 되어 있다.
+* 결과적으로 락을 걸고 푸는 코드도 호출된다는 뜻이다.
+
+#### BufferedXxx 클래스의 특징
+`BufferedXxx` 클래스는 자바 초창기에 만들어진 클래스인데, 처음부터 멀티 스레드를 고려해서 만든 클래스이다.
+따라서 멀티 스레드에 안전하지만 락을 걸고 푸는 동기화 코드로 인해 성능이 약간 저하될 수 있다.
+하지만 싱글 스레드 상황에서는 동기화 락이 필요하지 않기 때문에 직접 버퍼를 다룰 때와 비교해서 성능이 떨어진다.
+일반적인 상황이라면 이 정도 성능은 크게 문제가 되지 않기 때문에 싱글 스레드여도 `BufferedXxx` 클래스를 사용하면 충분하다.
+매우 큰 데이터를 다루어야 하고, 성능 최적화가 중요하다면 직접 버퍼를 다루는 방법을 고려하자.
+아쉽게도 동기화 락이 없는 `BufferedXxx` 클래스는 없다. 꼭 필요한 상황이라면 `BufferedXxx` 클래스를 참고해
+동기화 락 코드를 제거한 클래스를 직접 만들어 사용하면 된다.
+
+#### 한 번에 쓰기
+파일의 크기가 크지 않다면 간단하게 한 번에 쓰고 읽는 것도 좋은 방법이다.
+이 방법은 성능은 가장 빠르지만, 결과적으로 메모리를 한 번에 많이 사용하기 때문에 파일의 크기가 작아야 한다.
+
+> 정리
+
+* 파일의 크기가 크지 않아서, 메모리 사용에 큰 영향을 주지 않는다면 쉽고 빠르게 한 번에 처리하자.
+* 성능이 중요하고 큰 파일을 나누어 처리해야 한다면, 버퍼를 직접 다루자.
+* 성능이 크게 중요하지 않고, 버퍼 기능이 필요하면 `BufferedXxx` 클래스를 사용하자.
+  * `BufferedXxx`는 동기화 코드가 들어 있어서 thread safe하지만 약간의 성능 저하가 있다.
+
+---
