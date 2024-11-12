@@ -267,3 +267,122 @@ class BufferedInputStream {
   * `BufferedXxx`는 동기화 코드가 들어 있어서 thread safe하지만 약간의 성능 저하가 있다.
 
 ---
+# 문자 다루기
+스트림은 `byte`만 사용할 수 있으므로, `String`과 같은 문자는 직접 전달할 수 없다.
+그래서 개발자가 번거롭게 다음과 같은 변환 과정을 직접 호출해주어야 한다.
+* `String` + 문자 집합 => `byte[]`
+* `byte[]` + 문자 집합 => `String`
+
+`OutputStreamWriter`, `InputStreamReader`를 사용하면 이 과정을 쉽게 처리할 수 있다.
+그런데 `OutputStreamWriter`의 `write()`는 `byte`가 아니라 `String`이나 `char`를 사용한다.
+어떻게 된 것일까?
+
+자바는 byte를 다루는 I/O 클래스와 문자를 다루는 I/O 클래스를 둘로 나누어 두었다.
+
+* byte를 다루는 클래스
+```mermaid
+classDiagram
+
+OutputStream <|-- FileOutputStream
+OutputStream <|-- ByteArrayOutputStream
+OutputStream <|-- BufferedOutputStream
+InputStream <|-- FileInputStream
+InputStream <|-- ByteArrayInputStream
+InputStream <|-- BufferedInputStream
+        
+class OutputStream {
+  write(int)
+  write(byte[])
+}
+
+class FileOutputStream {
+  
+}
+class ByteArrayOutputStream {
+  
+}
+
+class BufferedOutputStream {
+  
+}
+
+class InputStream {
+  read()
+  read(byte[])
+  readAllBytes()
+}
+
+class FileInputStream {
+ 
+}
+class ByteArrayInputStream {
+  
+}
+
+class BufferedInputStream {
+  
+}
+```
+
+* 문자를 다루는 클래스
+```mermaid
+classDiagram
+
+Writer <|-- OutputStreamWriter
+OutputStreamWriter <|-- FileWriter
+Writer <|-- BufferedOutputWriter
+
+Reader <|-- InputStreamReader
+InputStreamReader <|-- FileReader
+Reader <|-- BufferedReader
+
+        
+class Writer {
+  write(String)
+  write(char[])
+}
+
+class OutputStreamWriter {
+  
+}
+
+class BufferedOutputWriter {
+  
+}
+
+class FileWriter {
+  
+}
+
+class Reader {
+    read()
+    read(char[])
+}
+class InputStreamReader {
+  
+}
+
+class BufferedReader {
+  
+}
+
+class FileReader {
+    
+}
+```
+여기서 꼭! 기억해야할 중요한 사실이 있다.
+모든 데이터는 **byte 단위(숫자)로 저장된다.** 따라서 `Writer`가 아무리 문자룰 다룬다고 해도 문자를 바로 저장할 수는 없다.
+이 클래스에 문자를 전달하면 결과적으로 내부에서는 지정된 문자 집합을 사용해서 문자를 byte로 인코딩해서 저장한다.
+
+> 정리
+* 기본(기반, 메인) 스트림
+  * File, 메모리, 콘솔 등에 직접 접근하는 스트림
+  * 단독으로 사용할 수 있음
+  * 예) `FileInputStream`, `FileOutputStream`, `FileReader`, `FileWriter`, `ByteArrayInputStream`, `ByteArrayOutputStream`
+* 보조 스트림
+  * 기본 스트림을 도와주는 스트림
+  * 단독으로 사용할 수 없음. 반드시 대상 스트림이 있어야 함
+  * 예) `BufferedInputStream`, `BufferedOutputStream`, `InputStreamReader`, `OutputStreamWriter`, `DataOutputStream`, `DataInputStream`, `PrintStream`
+
+---
+
