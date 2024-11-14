@@ -434,3 +434,30 @@ public interface Serializable {}
   * 다만 byte 기반이므로 JSON처럼 사람이 직접 읽기는 어렵다.
 
 ---
+# File, Files
+자바 1.0에서 `File` 클래스가 등장했다. 이후에 자바 1,7에서 `Files` 클래스를 대체할 `Files`와 `Path`가 등장했다.
+
+## Files의 특징
+* 성능과 편의성이 모두 개선되었다.
+* `File`은 과거의 호환성을 유지하기 위해 남겨둔 기능이다. 이제는 `Files` 사용을 먼저 고려하자.
+* `File` 클래스는 물론이고, `File`과 관련된 스트림(`FileInputStream`, `FileWriter`)의 사용을 고민하기 전에 `Files`에 있는 기능을 먼저 찾아보자 성능도 좋고, 사용하기도 더 편리하다.
+
+## 파일 복사 최적화
+```java
+try (FileInputStream fis = new FileInputStream("temp/copy.dat"); 
+     FileOutputStream fos = new FileOutputStream("temp/copy_new.dat")) {
+    fos.write(fis.readAllBytes());
+}
+```
+* `FileInputStream`에서 `readAllbytes`를 통해 한 번에 모든 데이터를 읽고 `write(bytes)`를 통해 한 번에 모든 데이터를 저장한다.
+* 파일 -> 자바 -> 파일의 과정을 거친다.
+* 자바가 `copy.dat`파일의 데이터를 자바 프로세스가 사용하는 메모리에 불러온다. 그리고 메모리에 있는 데이터를 `copy_new.dat`에 전달한다.
+
+```java
+Path source = Path.of("temp/copy.dat");
+Path target = Path.of("temp/copy_new.dat");
+Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+```
+* `Files.copy()`는 자바에서 파일 데이터를 불러오지 않고, 운영체제의 파일 복사 기능을 사용한다.
+* 파일을 다루어야 할 일이 있다면 항상 `Files`의 기능을 먼저 고려하자.
+* 만약 파일의 정보를 읽어서 처리해야 하거나, 스트림을 통해 네트워크에 전달해야 한다면 스트림을 직접 사용해야 한다.
