@@ -1,6 +1,7 @@
 package chat.client;
 
 import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 
 import static util.MyLogger.log;
@@ -31,9 +32,10 @@ public class ReadHandler implements Runnable {
     }
 
     public synchronized void close() {
-        if (isClosed) return;
+        if (isClosed) {
+            return;
+        }
 
-        client.close();
         isClosed = true;
         log("readHandler closed");
     }

@@ -43,7 +43,9 @@ public class Client {
     }
 
     public synchronized void close() {
-        if (isClosed) return;
+        if (isClosed) {
+            return;
+        }
 
         writeHandler.close();
         readHandler.close();
