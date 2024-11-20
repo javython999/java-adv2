@@ -608,4 +608,5 @@ DataOutputStream output = new DataOutputStream(socket.getOutputStream());
 따라서 기본적으로 정상 종료, 강제 종료 모두 자원을 정리하고 닫도록 설계하면 된다.
 예를 들어 `SocketException`, `EOFException`은 모두 `IOException`의 자식이다.
 따라서 `IOException`이 발생하면 자원을 정리하면된다.
-
+---
+# HTTP 서버 만들기
