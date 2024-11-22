@@ -651,3 +651,34 @@ URL은 ASCII 문자만 표현할 수 있으므로, UTF-8 문자를 표현할 수
    2. `EA`, `B0`, `80`을 byte로 변환, 3byte 획득
    3. `EA`, `B0`, `80`(3byte)를 UTF-8로 디코딩 -> 문자 "가" 획득
 
+## 웹 애플리케이션 서버의 역사
+실무 개발자가 목표라면, 웹 애플리케이션 서버(Web Application Server), 줄여서 WAS라는 단어를 많이 듣게 될 것이다.
+Web Server가 아니라 중간에 Application이 들어가는 이유는, 웹 서버의 역할을 하면서 추가로 애플리케이션, 그러니까 프로그램 코드도 수행할 수있는 서버라는 뜻이다.
+HTTP와 웹이 처음 등장하면서, 많은 회사에서 직접 HTTP 서버와 비슷한 기능을 개발하기 시작했다. 그런데 문제는 각각의 서버간에 호환성이 전혀 없는 것이다.
+예를 들어 A회사의 HTTP 서버를 사용하다가 B회사의 HTTP 서버로 번경하려면 인터페이스가 다르기 때문에 코드를 너무많이 수정해야 했다.
+
+## 서블릿과 웹 애플리케이션 서버
+이런 문제를 해결하기위해 1990년대 자바 진영에서는 서블릿이라는 표준이 등장하게 된다.
+
+```java
+package jakarta.servlet;
+
+import java.io.IOException;
+
+public interface Servlet {
+    void service(ServletRequest var1, ServletResponse var2) throws ServletException, IOException;
+}
+```
+* 서블릿은 `Servlet`, `HttpServlet`, `ServletRequest`, `ServletResponse`를 포함한 많은 표준은 제공한다.
+* HTTP 서버를 만드는 회사들은 모두 서블릿 기반으로 제공한다.
+
+서블릿을 제공하는 주요 자바 웹 애플리케이션 서버(WAS)는 다음과 같다.
+* 오픈소스
+  * Apache Tomcat
+  * Jetty
+  * Glass Fish
+  * Undertow
+* 상용
+  * IBM WebSphere
+  * Oracle WebLogic
+

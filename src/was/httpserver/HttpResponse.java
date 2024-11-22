@@ -1,9 +1,8 @@
 package was.httpserver;
 
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 
-import static java.nio.charset.StandardCharsets.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class HttpResponse {
 

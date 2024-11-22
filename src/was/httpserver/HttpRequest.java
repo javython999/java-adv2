@@ -3,20 +3,19 @@ package was.httpserver;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.nio.charset.StandardCharsets.*;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
-public class HttpReqeust {
+public class HttpRequest {
 
     private String method;
     private String path;
     private final Map<String, String> queryParameters = new HashMap<>();
     private final Map<String, String> headers = new HashMap<>();
 
-    public HttpReqeust(BufferedReader reader) throws IOException {
+    public HttpRequest(BufferedReader reader) throws IOException {
         parseRequestLine(reader);
         parseHeaders(reader);
     }
