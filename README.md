@@ -723,3 +723,164 @@ System.out.println(user.getName());
 이를 무분별하게 사용하면 코드의 가독성과 안정성을 크게 저하시킬 수 있다.
 
 ---
+# 애노테이션
+영단어 Annotation은 일반적으로 '주석' 또는 '메모'를 의미한다.   
+애노테이션은 코드에 추가적인 정보를 주석처럼 제공한다.   
+하지만 일반 주석과 달리 컴파일러나 런타임에서 해석될 수 있는 메타데이터를 제공한다.   
+즉, 애노테이션을 달아놓은 것처럼 특정 정보나 지시를 추가하는 도구로, 코드에 대한 메타데이터를 표현하는 방법이다.
+
+## 애노테이션 정의
+```java
+@Retention(RetentionPolicy.RUNTIME)
+public @interface AnnoElement {
+
+    String value();
+    int count() default 0;
+    String[] tags() default {};
+    
+    Class<? extends MyLogger> annoData() default MyLogger.class;
+}
+```
+* 애노테이션은 `@interface` 키워드로 정의한다.
+* 애노테이션은 속성을 가질 수 있는데, 인터페이스와 비슷하게 정의한다.
+
+### 애노테이션 정의 규칙
+데이터 타입
+* 기본 타입
+* String
+* `Class`(메타데이터) 또는 인터페이스
+* enum
+* 다른 애노테이션 타입
+* 위의 타입들의 배열
+* 앞서 설명한 타입 외에는 정의할 수 없다. 일반적인 클래스를 사용할 수 없다.
+
+default 값
+* 요소에 default 값을 지정할 수 있다.
+* 예: `String value() default "기본값`;
+
+요소 이름
+* 메서드 형태로 정의 된다.
+* 괄호()를 포함하되 매개변수는 없어야 한다.
+
+반환 값
+* `void`를 반환 타입으로 사용할 수 없다.
+
+예외
+* 예외를 선언할 수 없다.
+
+특별한 요소 이름
+`value`라는 이름의 요소를 하나만 가질 경우, 애노테이션 사용 시 요소 이름을 생략할 수 있다.
+
+## 메타 애노테이션
+애노테이션을 정의하는데 사용하는 특별한 애노테이션을 메타 애노테이션이라 한다.
+* @Retention
+  * RetentionPolicy.SOURCE
+  * RetentionPolicy.CLASS
+  * RetentionPolicy.RUNTIME
+* @Target
+* @Documented
+* @Inherited
+
+### @Retention
+애노테이션의 생존 기간을 지정한다.
+```java
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.ANNOTATION_TYPE)
+public @interface Retention {
+    RetentionPolicy value();
+}
+```
+```java
+public enum RetentionPolicy {
+    SOURCE,
+    CLASS,
+    RUNTIME
+}
+```
+* `RetentionPolicy.SOURCE`: 소스 코드에 남아 있다. 컴파일 시점에 제거 된다.
+* `RetentionPolicy.CLASS`: 컴파일 후 `.class` 파일까지는 남아있지만 자바 실행 시점에 제거된다.
+* `RetentionPolicy.RUNTIME`: 자바 실행 중에도 남아 있다. 대부분 이 설정을 사용한다.
+
+### @Target
+애노테이션을 적용할 수 있는 위치를 지정한다.
+
+```java
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.ANNOTATION_TYPE)
+public @interface Retention {
+    ElementType[] value();
+}
+```
+```java
+public enum ElementType {
+    TYPE,
+    FIELD,
+    METHOD,
+    PARAMETER,
+    CONSTRUCTOR,
+    LOCAL_VARIABLE,
+    ANNOTATION_TYPE,
+    PACKAGE,
+    TYPE_PARAMETER,
+    TYPE_USE,
+    MODULE,
+    RECORD_COMPONENT;
+}
+```
+* 이름만으로 충분히 이해가 된다. 주로 `TYPE`, `FIELD`, `METHOD`를 사용한다.
+
+### @Document
+자바 API 문서를 만들 때 해당 애노테이션이 함께 포함되는지 지정한다.
+
+### @Inherited
+자식 클래스가 애노테이션을 상속 받을 수 있다.
+
+## 애노테이션과 상속
+모든 애노테이션은 `java.lang.annoation.Annotation` 인터페이스를 묵시적으로 상속 받는다.
+```java
+public interface Annotation {
+    boolean equals(Object obj);
+    int hashCode();
+    String toString();
+    Class<? extends Annotation> annotationType();
+}
+```
+`java.lang.annoation.Annotation` 인터페이스는 개발자가 직접 구현하거나 확장할 수 있는 것이 아니라,
+자바 언어 자체에서 애노테이션을 위한 기반으로 사용된다. 이 인터페이스는 다음과 같은 메서드를 제공한다.
+* boolean equals(Object obj): 두 애노테이션의 동일성을 비교한다.
+* int hashCode(): 애노테이션의 해시코드를 반환한다.
+* String toString(): 애노테이션의 문자열 표현을 반환한다.
+* Class<? extends Annotation> annotationType(): 애노테이션의 타입을 반환한다.
+
+모든 애노테이션은 기본적으로 `Annotation` 인터페이스를 확장하며, 이로 인해 자바에서 애노테이션은 특별한 형태의 인터페이스로 간주된다.
+하지만 자바에서 애노테이션을 정의할 때, 개발자가 명식저으로 `Annotation` 인터페이스를 상속하거나 구현할 필요는 없다.
+애노테이션을 `@interface` 키워드를 통해 정의하면, 자바 컴파일러가 자동으로 `Annotation` 인터페이스를 확장하도록 처리해준다.
+
+### 애노테이션 정의
+```java
+public @interface MyCustomAnnotation {}
+```
+
+### 자바가 자동으로 처리
+```java
+public interface MyCustomAnnotation extends java.lang.annotation.Annotation {}
+```
+
+#### 애노테이션과 상속
+* 애노테이션은 다른 애노테이션이나 인터페이스를 직접 상속할 수 없다.
+* 오직 `java.lang.annotation.Annotation` 인터페이스만 상속한다.
+* 따라서 애노테이션 사이에는 상속이라는 개념이 존재하지 않는다.
+
+## @Inherited
+애노테이션을 정의할 때 `@Inherited` 메타 애노테이션을 붙이면,
+애노테잉션을 적용한 클래스의 자식도 해당 애노테이션을 부여 받을 수 있다.
+단 주의할 점은 클래스 상속에서만 작동하고, 인터페이스의 구현체에는 적용되지 않는다.
+
+### @Inherited 클래스가 상속에만 적용되는 이유
+1. 클래스 상속과 인터페이스 구현의 차이
+   * 클래스 상속은 자식 클래스가 부모 클래스의 상속과 메서드를 상속받는 개념이다. 즉, 자식 클래스는 부모 클래스의 특성을 이어 받으므로, 부모 클래스에 정의된 애노테이션을 자식 클래스가 자동으로 상속받을 수 있는 논리적 기반이 있다.
+   * 인터페이스는 메서드의 시그니처만을 정의할 뿐, 상태나 행위를 가지지 않기 때문에, 인터페이스의 구현체가 애노테이션을 상속한다는 개념이 맞지 않는다.
+2. 인터페이스와 다중 구현, 다이아몬드 문제
+    * 인터페이스는 다중 구현이 가능하다. 만약 인터페이스의 애노테이션을 구현 클래스에 상속하게 되면 여러 인터페이스의 이노테이션간 충돌이나 모호한 상황이 발생할 수 있다.
